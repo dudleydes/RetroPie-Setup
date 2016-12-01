@@ -16,8 +16,8 @@ rp_module_section="opt"
 rp_module_flags="!armv6 !mali"
 
 function depends_reicast() {
-    local depends=(libsdl1.2-dev python-dev python-pip alsa-oss)
-    [[ "$__raspbian_ver" -ge "8" ]] && depends+=(libevdev-dev)
+    local depends=(libsdl1.2-dev python-dev python-pip alsa-oss python-setuptools)
+    compareVersions "$__os_release" ge 8 && depends+=(libevdev-dev)
     getDepends "${depends[@]}"
     pip install evdev
 }
@@ -58,7 +58,7 @@ function install_reicast() {
 
 function configure_reicast() {
     # copy hotkey remapping start script
-    cp "$scriptdir/scriptmodules/$md_type/$md_id/reicast.sh" "$md_inst/bin/"
+    cp "$md_data/reicast.sh" "$md_inst/bin/"
     chmod +x "$md_inst/bin/reicast.sh"
 
     mkRomDir "dreamcast"

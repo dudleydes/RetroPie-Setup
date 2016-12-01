@@ -15,12 +15,15 @@ rp_module_help="see wiki for detailed explanation"
 rp_module_section="exp"
 
 function sources_lr-mess() {
-    gitPullOrClone "$md_build" https://github.com/libretro/MAME.git
+    gitPullOrClone "$md_build" https://github.com/libretro/mame.git
 }
 
 function build_lr-mess() {
-    make -f Makefile.libretro clean
-    make -f Makefile.libretro SUBTARGET=mess
+    rpSwap on 750
+    local params=($(_get_params_lr-mame) SUBTARGET=mess)
+    make clean
+    make "${params[@]}"
+    rpSwap off
     md_ret_require="$md_build/mess_libretro.so"
 }
 
@@ -41,7 +44,7 @@ function configure_lr-mess() {
     ensureSystemretroconfig "coleco"
     ensureSystemretroconfig "arcadia"
     ensureSystemretroconfig "crvision"
-    
+
     setRetroArchCoreOption "mame_softlists_enable" "enabled"
     setRetroArchCoreOption "mame_softlists_auto_media" "enabled"
     setRetroArchCoreOption "mame_boot_from_cli" "enabled"

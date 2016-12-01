@@ -51,7 +51,7 @@ function sources_mupen64plus() {
         gitPullOrClone "$dir" https://github.com/${repo[0]}/mupen64plus-${repo[1]} ${repo[2]}
     done
     gitPullOrClone "$md_build/GLideN64" https://github.com/gonetz/GLideN64.git
-    # fix for static x86_64 libs found in repo which are not usefull if target is i686 
+    # fix for static x86_64 libs found in repo which are not usefull if target is i686
     isPlatform "x11" && sed -i "s/BCMHOST/UNIX/g" GLideN64/src/GLideNHQ/CMakeLists.txt
 }
 
@@ -66,10 +66,11 @@ function build_mupen64plus() {
             params=()
             isPlatform "rpi1" && params+=("VC=1" "VFP=1" "VFP_HARD=1")
             isPlatform "neon" && params+=("VC=1" "NEON=1")
-            isPlatform "x11" && params+=("OSD=1")
+            isPlatform "x11" && params+=("OSD=1" "PIE=1")
             isPlatform "x86" && params+=("SSE=SSSE3")
             [[ "$dir" == "mupen64plus-ui-console" ]] && params+=("COREDIR=$md_inst/lib/" "PLUGINDIR=$md_inst/lib/mupen64plus/")
-            make -C "$dir/projects/unix" all "${params[@]}" OPTFLAGS="$CFLAGS -flto"
+            # MAKEFLAGS replace removes any distcc from path, as it segfaults with cross compiler and lto
+            MAKEFLAGS="${MAKEFLAGS/\/usr\/lib\/distcc:/}" make -C "$dir/projects/unix" all "${params[@]}" OPTFLAGS="$CFLAGS -O3 -flto"
         fi
     done
 
@@ -78,6 +79,7 @@ function build_mupen64plus() {
     pushd $md_build/GLideN64/projects/cmake
     params=("-DMUPENPLUSAPI=On" "-DVEC4_OPT=On")
     isPlatform "neon" && params+=("-DNEON_OPT=On")
+    isPlatform "rpi3" && params+=("-DCRC_ARMV8=On")
     cmake "${params[@]}" ../../src/
     make
     popd
@@ -155,7 +157,7 @@ function configure_mupen64plus() {
     [[ "$md_mode" == "remove" ]] && return
 
     # copy hotkey remapping start script
-    cp "$scriptdir/scriptmodules/$md_type/$md_id/mupen64plus.sh" "$md_inst/bin/"
+    cp "$md_data/mupen64plus.sh" "$md_inst/bin/"
     chmod +x "$md_inst/bin/mupen64plus.sh"
 
     mkUserDir "$md_conf_root/n64/"
@@ -189,7 +191,7 @@ function configure_mupen64plus() {
             echo "[Video-GLideN64]" >> "$config"
         fi
         # Settings version. Don't touch it.
-        iniSet "configVersion" "13"
+        iniSet "configVersion" "15"
         # Bilinear filtering mode (0=N64 3point, 1=standard)
         iniSet "bilinearMode" "1"
         # Size of texture cache in megabytes. Good value is VRAM*3/4
@@ -202,7 +204,7 @@ function configure_mupen64plus() {
         # Disable gles2n64 autores feature and use dispmanx upscaling
         iniConfig " = " "" "$md_conf_root/n64/gles2n64.conf"
         iniSet "auto resolution" "0"
-        
+
         addAutoConf mupen64plus_audio 1
         addAutoConf mupen64plus_compatibility_check 1
     else

@@ -16,7 +16,7 @@ rp_module_section="opt"
 rp_module_flags="!x86 !mali"
 
 function depends_uae4arm() {
-    getDepends libsdl1.2-dev libsdl-gfx1.2-dev libsdl-ttf2.0-dev libguichan-dev libmpg123-dev
+    getDepends libsdl1.2-dev libsdl-gfx1.2-dev libsdl-ttf2.0-dev libguichan-dev libmpg123-dev libxml2-dev libflac-dev
 }
 
 function sources_uae4arm() {
@@ -24,10 +24,11 @@ function sources_uae4arm() {
 }
 
 function build_uae4arm() {
+    make clean
     if isPlatform "rpi1"; then
-        make PLATFORM=rpi1 CPU_FLAGS=""
+        CXXFLAGS="" make PLATFORM=rpi1
     else
-        make PLATFORM=rpi2 CPU_FLAGS="-mfpu=neon"
+        CXXFLAGS="" make PLATFORM=rpi2
     fi
     md_ret_require="$md_build/uae4arm"
 }
@@ -66,5 +67,5 @@ _EOF_
     chmod a+x "$romdir/amiga/+Start UAE4Arm.sh"
     chown $user:$user "$romdir/amiga/+Start UAE4Arm.sh"
 
-    addSystem 1 "$md_id" "amiga" "$romdir/amiga/+Start\ UAE4Arm.sh" "Amiga" ".sh"
+    addSystem 1 "$md_id" "amiga" "bash $romdir/amiga/+Start\ UAE4Arm.sh" "Amiga" ".sh"
 }
